@@ -1,1 +1,3 @@
 rootProject.name = 'flea_map_app'
+include("api")
+
