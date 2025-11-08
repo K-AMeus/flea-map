@@ -1,27 +1,72 @@
-# IDEs and editors
-/.idea
+.gradle/
+**/.gradle/
+build/
+**/build/
+out/
+**/out/
+
+!gradle/wrapper/**
+!gradlew
+!gradlew.bat
+
+.idea/
+*.iml
+*.ipr
+*.iws
+
 .project
 .classpath
-.c9/
-*.launch
 .settings/
-*.sublime-workspace
+.springBeans
+.sts4-cache
 
-# IDE - VSCode
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.DS_STORE
 
-# dotenv environment variable files
+.DS_Store
+*.log
+*.swp
+*.pyc
+
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/.last_build_id
+**/ios/build/
+
+**/android/.gradle/
+**/android/build/
+**/android/local.properties
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+
+**/*.jks
+**/*.keystore
+
 .env
+.env.local
 .env.development.local
 .env.test.local
 .env.production.local
-.env.local
 
-# temp directory
-.temp
-.tmp
+.tmp/
+.temp/
