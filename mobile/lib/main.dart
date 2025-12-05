@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
+import 'features/auth/supabase/supabase_client.dart';
+import 'features/auth/auth_wrapper.dart';
 
-void main() {
-  runApp(const MainApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeSupabase();
+  runApp(const FleaMapApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class FleaMapApp extends StatelessWidget {
+  const FleaMapApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+    return MaterialApp(
+      title: 'Flea Map',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
+        useMaterial3: true,
       ),
+      home: const AuthWrapper(),
     );
   }
 }

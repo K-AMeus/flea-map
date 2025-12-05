@@ -52,6 +52,10 @@ nbdist/
 **/ios/Flutter/.last_build_id
 **/ios/build/
 
+**/macos/Pods/
+**/macos/Flutter/ephemeral/
+
+
 **/android/.gradle/
 **/android/build/
 **/android/local.properties
@@ -70,3 +74,5 @@ nbdist/
 
 .tmp/
 .temp/
+
+**/devtools_options.yaml
