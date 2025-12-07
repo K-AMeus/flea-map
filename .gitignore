@@ -72,6 +72,8 @@ nbdist/
 .env.test.local
 .env.production.local
 
+**/ios/Flutter/Secrets.xcconfig
+
 .tmp/
 .temp/
 

@@ -31,7 +31,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _user = user;
       });
     } catch (e) {
-      debugPrint('Critical profile loading error: $e');
       if (mounted && _user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

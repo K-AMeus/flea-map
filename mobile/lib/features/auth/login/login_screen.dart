@@ -90,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         password: password,
                       );
                     } catch (e) {
-                      debugPrint('AuthException: ${e.toString()}');
                       scaffoldMessenger.showSnackBar(
                         const SnackBar(
                           content: Text('Login failed'),
@@ -122,7 +121,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         password: password,
                       );
                     } catch (e) {
-                      debugPrint('AuthException: ${e.toString()}');
                       scaffoldMessenger.showSnackBar(
                         const SnackBar(
                           content: Text('Signup failed'),
