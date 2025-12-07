@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase/supabase_client.dart';
 import 'login/login_screen.dart';
-import '../user/profile.dart';
+import '../navigation/navbar.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -27,7 +27,7 @@ class AuthWrapper extends StatelessWidget {
           );
         }
 
-        return const ProfileScreen();
+        return const MainNavigation();
       },
     );
   }
