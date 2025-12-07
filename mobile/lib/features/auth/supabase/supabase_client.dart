@@ -8,10 +8,10 @@ Future<void> initializeSupabase() async {
   final anonKey = dotenv.env['SUPABASE_ANON_KEY'];
 
   if (url == null || url.isEmpty) {
-    throw StateError('SUPABASE_URL is not set in .env file');
+    throw StateError('SUPABASE_URL has not been set');
   }
   if (anonKey == null || anonKey.isEmpty) {
-    throw StateError('SUPABASE_ANON_KEY is not set in .env file');
+    throw StateError('SUPABASE_ANON_KEY has not been set');
   }
 
   await Supabase.initialize(url: url, anonKey: anonKey);
