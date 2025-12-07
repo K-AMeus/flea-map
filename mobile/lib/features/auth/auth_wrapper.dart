@@ -45,10 +45,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
         final session = snapshot.hasData ? snapshot.data!.session : null;
 
         if (session == null) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Flea Map')),
-            body: const LoginScreen(),
-          );
+          return const Scaffold(body: SafeArea(child: LoginScreen()));
         }
 
         return const MainNavigation();

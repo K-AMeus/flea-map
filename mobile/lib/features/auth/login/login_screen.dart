@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_button/sign_in_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../supabase/supabase_client.dart';
 
@@ -102,6 +101,15 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Widget _buildGoogleLogo() {
+    return Image.network(
+      'http://pngimg.com/uploads/google/google_PNG19635.png',
+      width: 24,
+      height: 24,
+      fit: BoxFit.cover,
+    );
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -111,13 +119,35 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final buttonStyle = FilledButton.styleFrom(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      minimumSize: const Size(double.infinity, 50),
+    );
+
     return _loading
         ? const Center(child: CircularProgressIndicator())
         : Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(24.0),
               children: [
+                const SizedBox(height: 40),
+                Text(
+                  'Welcome',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Sign in to continue',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
                 TextFormField(
                   keyboardType: TextInputType.emailAddress,
                   controller: _emailController,
@@ -147,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   validator: _passwordValidator,
                   autovalidateMode: AutovalidateMode.disabled,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 FilledButton(
                   onPressed: () async {
                     if (!_formKey.currentState!.validate()) return;
@@ -178,15 +208,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       });
                     }
                   },
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
+                  style: buttonStyle,
+                  child: const Text(
+                    'Sign In',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
-                  child: const Text('Login'),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 TextButton(
                   onPressed: () async {
                     if (!_formKey.currentState!.validate()) return;
@@ -219,13 +247,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
+                      horizontal: 24,
                       vertical: 16,
                     ),
+                    minimumSize: const Size(double.infinity, 50),
                   ),
-                  child: const Text('Signup'),
+                  child: const Text(
+                    'Create Account',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
                 Row(
                   children: [
                     Expanded(
@@ -249,17 +281,31 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
                 _googleLoading
-                    ? const Center(
-                        child: SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
+                    ? SizedBox(
+                        height: 50,
+                        child: const Center(child: CircularProgressIndicator()),
                       )
-                    : SignInButton(
-                        Buttons.google,
+                    : OutlinedButton.icon(
                         onPressed: _signInWithGoogle,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
+                          ),
+                          minimumSize: const Size(double.infinity, 50),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        icon: _buildGoogleLogo(),
+                        label: const Text(
+                          'Continue with Google',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
                       ),
+                const SizedBox(height: 20),
               ],
             ),
           );
