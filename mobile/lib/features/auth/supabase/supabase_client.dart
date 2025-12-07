@@ -4,10 +4,17 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 Future<void> initializeSupabase() async {
   await dotenv.load(fileName: '.env');
 
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
-  );
+  final url = dotenv.env['SUPABASE_URL'];
+  final anonKey = dotenv.env['SUPABASE_ANON_KEY'];
+
+  if (url == null || url.isEmpty) {
+    throw StateError('SUPABASE_URL is not set in .env file');
+  }
+  if (anonKey == null || anonKey.isEmpty) {
+    throw StateError('SUPABASE_ANON_KEY is not set in .env file');
+  }
+
+  await Supabase.initialize(url: url, anonKey: anonKey);
 }
 
-final supabase = Supabase.instance.client;
+SupabaseClient get supabase => Supabase.instance.client;
