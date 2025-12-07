@@ -3,8 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase/supabase_client.dart';
 import 'login/login_screen.dart';
 import '../navigation/navbar.dart';
-import '../map/services/shop_service.dart';
-import '../map/services/favorite_service.dart';
+import '../shared/service/shop_service.dart';
+import '../shared/service/favorite_service.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'models/shop.dart';
-import 'services/shop_service.dart';
+import '../shared/model/shop.dart';
+import '../shared/service/shop_service.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});

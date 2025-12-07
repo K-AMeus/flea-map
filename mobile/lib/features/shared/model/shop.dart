@@ -29,7 +29,7 @@ class Shop {
 
   factory Shop.fromJson(Map<String, dynamic> json) {
     return Shop(
-      id: json['id'].toString(),
+      id: json['id'] as String,
       name: json['name'] as String,
       address: json['address'] as String,
       lat: (json['lat'] as num).toDouble(),

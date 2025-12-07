@@ -1,5 +1,5 @@
 import '../../auth/supabase/supabase_client.dart';
-import '../models/shop.dart';
+import '../model/shop.dart';
 
 class ShopService {
   static final ShopService _instance = ShopService._internal();
@@ -9,7 +9,7 @@ class ShopService {
   List<Shop>? _cachedShops;
   DateTime? _lastFetchTime;
 
-  static const Duration _cacheDuration = Duration(minutes: 5);
+  static const Duration _cacheDuration = Duration(minutes: 15);
 
   Future<List<Shop>>? _pendingRequest;
 
@@ -38,7 +38,7 @@ class ShopService {
 
   Future<List<Shop>> _fetchShops() async {
     try {
-      final response = await supabase.from('shop').select();
+      final response = await supabase.from('shops').select();
 
       _cachedShops = response.map((json) => Shop.fromJson(json)).toList();
       _lastFetchTime = DateTime.now();
@@ -56,12 +56,4 @@ class ShopService {
     _cachedShops = null;
     _lastFetchTime = null;
   }
-
-  Map<String, dynamic> get cacheInfo => {
-    'hasCache': _cachedShops != null,
-    'itemCount': _cachedShops?.length ?? 0,
-    'lastFetch': _lastFetchTime?.toIso8601String(),
-    'isValid': _isCacheValid,
-    'hasPendingRequest': _pendingRequest != null,
-  };
 }

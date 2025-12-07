@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../map/models/shop.dart';
-import '../map/services/shop_service.dart';
+import '../shared/model/shop.dart';
+import '../shared/service/shop_service.dart';
+import '../shared/service/favorite_service.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -12,33 +13,82 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   final _shopService = ShopService();
+  final _favoriteService = FavoriteService();
   bool _loading = true;
   List<Shop> _shops = [];
+  Set<String> _favoriteIds = {};
 
   @override
   void initState() {
     super.initState();
-    _loadShops();
+    _loadData();
+    _favoriteService.favoritesChanged.addListener(_onFavoritesChanged);
   }
 
-  Future<void> _loadShops({bool forceRefresh = false}) async {
+  @override
+  void dispose() {
+    _favoriteService.favoritesChanged.removeListener(_onFavoritesChanged);
+    super.dispose();
+  }
+
+  void _onFavoritesChanged() {
+    _loadFavoriteIds();
+  }
+
+  Future<void> _loadData({bool forceRefresh = false}) async {
+    List<Shop> shops = [];
+    Set<String> favoriteIds = {};
+    String? errorMessage;
+
     try {
-      final shops = await _shopService.getShops(forceRefresh: forceRefresh);
+      shops = await _shopService.getShops(forceRefresh: forceRefresh);
+    } catch (e) {
+      errorMessage = 'Error loading shops: $e';
+    }
 
+    try {
+      favoriteIds = await _favoriteService.getFavoriteIds(
+        forceRefresh: forceRefresh,
+      );
+    } catch (e) {
+      errorMessage ??= 'Error loading favorites: $e';
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _shops = shops;
+      _favoriteIds = favoriteIds;
+      _loading = false;
+    });
+
+    if (errorMessage != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.orange),
+      );
+    }
+  }
+
+  Future<void> _loadFavoriteIds() async {
+    try {
+      final favoriteIds = await _favoriteService.getFavoriteIds(
+        forceRefresh: true,
+      );
       if (!mounted) return;
-
       setState(() {
-        _shops = shops;
-        _loading = false;
+        _favoriteIds = favoriteIds;
       });
+    } catch (e) {}
+  }
+
+  Future<void> _toggleFavorite(String shopId) async {
+    try {
+      await _favoriteService.toggleFavorite(shopId);
     } catch (e) {
       if (!mounted) return;
-
-      setState(() => _loading = false);
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error loading shops: $e'),
+          content: Text('Error favouriting shop: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -74,7 +124,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Explore')),
+      appBar: AppBar(title: const Text('Explore shops')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _shops.isEmpty
@@ -97,7 +147,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               ),
             )
           : RefreshIndicator(
-              onRefresh: () => _loadShops(forceRefresh: true),
+              onRefresh: () => _loadData(forceRefresh: true),
               child: ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: _shops.length,
@@ -108,6 +158,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   return _ShopListItem(
                     shop: shop,
                     openingHoursText: _getTodayOpeningHours(shop),
+                    isFavorite: _favoriteIds.contains(shop.id),
+                    onFavoriteToggle: () => _toggleFavorite(shop.id),
                   );
                 },
               ),
@@ -119,8 +171,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
 class _ShopListItem extends StatelessWidget {
   final Shop shop;
   final String openingHoursText;
+  final bool isFavorite;
+  final VoidCallback onFavoriteToggle;
 
-  const _ShopListItem({required this.shop, required this.openingHoursText});
+  const _ShopListItem({
+    required this.shop,
+    required this.openingHoursText,
+    required this.isFavorite,
+    required this.onFavoriteToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -202,6 +261,14 @@ class _ShopListItem extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          // Favorite button
+          IconButton(
+            icon: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: isFavorite ? Colors.red : Colors.grey,
+            ),
+            onPressed: onFavoriteToggle,
           ),
         ],
       ),
