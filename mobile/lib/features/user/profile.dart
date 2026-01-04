@@ -22,6 +22,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadProfile();
   }
 
+  String? get _displayName => _user?.userMetadata?['display_name'] as String?;
+
   Future<void> _loadProfile() async {
     try {
       final user = supabase.auth.currentUser;
@@ -41,6 +43,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error loading profile'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _editDisplayName() async {
+    final controller = TextEditingController(text: _displayName ?? '');
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Display Name'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Enter your display name',
+            border: OutlineInputBorder(),
+          ),
+          textCapitalization: TextCapitalization.words,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null || !mounted) return;
+
+    try {
+      await supabase.auth.updateUser(
+        UserAttributes(data: {'display_name': result.isEmpty ? null : result}),
+      );
+
+      final user = supabase.auth.currentUser;
+      setState(() {
+        _user = user;
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Display name updated')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error updating display name'),
           backgroundColor: Colors.red,
         ),
       );
@@ -122,7 +180,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     radius: 50,
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     child: Text(
-                      _user?.email?.substring(0, 1).toUpperCase() ?? 'U',
+                      (_displayName ?? _user?.email)
+                              ?.substring(0, 1)
+                              .toUpperCase() ??
+                          'U',
                       style: const TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.bold,
@@ -131,13 +192,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (_user?.email != null)
+                  Text(
+                    _displayName ?? _user?.email ?? 'Unknown',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (_displayName != null && _user?.email != null) ...[
+                    const SizedBox(height: 4),
                     Text(
                       _user!.email!,
                       style: Theme.of(
                         context,
                       ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                     ),
+                  ],
                 ],
               ),
             ),
@@ -154,6 +223,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Card(
               child: Column(
                 children: [
+                  ListTile(
+                    leading: const Icon(Icons.person_outline),
+                    title: const Text('Display Name'),
+                    subtitle: Text(_displayName ?? 'Not set'),
+                    trailing: const Icon(Icons.edit, size: 20),
+                    onTap: _editDisplayName,
+                  ),
+                  const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.email_outlined),
                     title: const Text('Email'),
