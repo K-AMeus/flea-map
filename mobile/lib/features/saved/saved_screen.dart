@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import '../shared/model/shop.dart';
 import '../shared/service/favorite_service.dart';
+import '../shared/utils/shop_utils.dart';
+import '../shared/widgets/shop_list_item.dart';
 
 class SavedScreen extends StatefulWidget {
   const SavedScreen({super.key});
@@ -15,6 +16,7 @@ class _SavedScreenState extends State<SavedScreen> {
   final _favoriteService = FavoriteService();
   bool _loading = true;
   List<Shop> _favoriteShops = [];
+  final Map<String, bool> _loadingFavorites = {};
 
   @override
   void initState() {
@@ -59,30 +61,31 @@ class _SavedScreenState extends State<SavedScreen> {
     }
   }
 
-  String _getTodayOpeningHours(Shop shop) {
-    if (shop.openingHours == null) return 'Hours not available';
+  Future<void> _removeFavorite(String shopId) async {
+    if (_loadingFavorites[shopId] == true) return;
 
-    final now = DateTime.now();
-    const dayNames = [
-      'monday',
-      'tuesday',
-      'wednesday',
-      'thursday',
-      'friday',
-      'saturday',
-      'sunday',
-    ];
-    final today = dayNames[now.weekday - 1];
+    setState(() {
+      _loadingFavorites[shopId] = true;
+    });
 
-    final todayHours = shop.openingHours![today];
-    if (todayHours == null) return 'Closed today';
-
-    final open = todayHours['open'];
-    final close = todayHours['close'];
-
-    if (open == null || close == null) return 'Closed today';
-
-    return 'open today: $open - $close';
+    try {
+      await _favoriteService.removeFavorite(shopId);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error removing favorite: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingFavorites[shopId] = false;
+        });
+      }
+    }
   }
 
   @override
@@ -119,194 +122,16 @@ class _SavedScreenState extends State<SavedScreen> {
                     const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final shop = _favoriteShops[index];
-                  return _ShopListItem(
+                  return ShopListItem(
                     shop: shop,
-                    openingHoursText: _getTodayOpeningHours(shop),
+                    openingHoursText: getTodayOpeningHours(shop.openingHours),
+                    isFavorite: true,
+                    onFavoriteToggle: () => _removeFavorite(shop.id),
+                    isLoadingFavorite: _loadingFavorites[shop.id] ?? false,
                   );
                 },
               ),
             ),
-    );
-  }
-}
-
-class _ShopListItem extends StatefulWidget {
-  final Shop shop;
-  final String openingHoursText;
-
-  const _ShopListItem({required this.shop, required this.openingHoursText});
-
-  @override
-  State<_ShopListItem> createState() => _ShopListItemState();
-}
-
-class _ShopListItemState extends State<_ShopListItem> {
-  final _favoriteService = FavoriteService();
-  bool _isLoadingFavorite = false;
-
-  Future<void> _removeFavorite() async {
-    if (_isLoadingFavorite) return;
-
-    setState(() {
-      _isLoadingFavorite = true;
-    });
-
-    try {
-      await _favoriteService.removeFavorite(widget.shop.id);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error removing favorite: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoadingFavorite = false;
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child:
-                widget.shop.imageUrl != null && widget.shop.imageUrl!.isNotEmpty
-                ? CachedNetworkImage(
-                    imageUrl: widget.shop.imageUrl!,
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: const Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Icon(
-                        Icons.store,
-                        size: 30,
-                        color: Colors.grey.shade400,
-                      ),
-                    ),
-                  )
-                : Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Icon(
-                      Icons.store,
-                      size: 30,
-                      color: Colors.grey.shade400,
-                    ),
-                  ),
-          ),
-          const SizedBox(width: 12),
-          // Shop info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.shop.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    // Rating stars
-                    ...List.generate(5, (index) {
-                      final rating = widget.shop.rating ?? 0;
-                      if (index < rating.floor()) {
-                        return const Icon(
-                          Icons.star,
-                          size: 16,
-                          color: Colors.amber,
-                        );
-                      } else if (index < rating) {
-                        return const Icon(
-                          Icons.star_half,
-                          size: 16,
-                          color: Colors.amber,
-                        );
-                      } else {
-                        return Icon(
-                          Icons.star_border,
-                          size: 16,
-                          color: Colors.grey.shade300,
-                        );
-                      }
-                    }),
-                    if (widget.shop.ratingCount != null) ...[
-                      const SizedBox(width: 4),
-                      Text(
-                        '(${widget.shop.ratingCount})',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.openingHoursText,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: _isLoadingFavorite
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.favorite, color: Colors.red),
-            onPressed: _removeFavorite,
-          ),
-        ],
-      ),
     );
   }
 }
