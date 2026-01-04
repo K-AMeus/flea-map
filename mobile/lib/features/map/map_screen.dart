@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../shared/model/shop.dart';
 import '../shared/service/shop_service.dart';
 import '../shared/service/location_service.dart';
@@ -204,17 +205,39 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               Text(shop.about!, style: Theme.of(context).textTheme.bodyMedium),
             ],
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                    label: const Text('Close'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => _openInMaps(shop),
+                    icon: const Icon(Icons.directions),
+                    label: const Text('Open in Maps'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _openInMaps(Shop shop) async {
+    final url = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}',
+    );
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
   }
 
   void _showLocationPermissionDialog() {
