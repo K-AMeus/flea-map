@@ -91,7 +91,9 @@ class _SavedScreenState extends State<SavedScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Saved')),
+      appBar: AppBar(
+        title: Text(_loading ? 'Saved' : 'Saved (${_favoriteShops.length})'),
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _favoriteShops.isEmpty

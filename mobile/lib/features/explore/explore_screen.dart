@@ -14,6 +14,8 @@ class ExploreScreen extends StatefulWidget {
   State<ExploreScreen> createState() => _ExploreScreenState();
 }
 
+enum FilterOption { bestRated, openNow }
+
 class _ExploreScreenState extends State<ExploreScreen> {
   final _shopService = ShopService();
   final _favoriteService = FavoriteService();
@@ -23,13 +25,31 @@ class _ExploreScreenState extends State<ExploreScreen> {
   List<Shop> _shops = [];
   Set<String> _favoriteIds = {};
   String _searchQuery = '';
+  final Set<FilterOption> _activeFilters = {};
 
   List<Shop> get _filteredShops {
-    if (_searchQuery.isEmpty) return _shops;
-    final query = _searchQuery.toLowerCase();
-    return _shops
-        .where((shop) => shop.name.toLowerCase().contains(query))
-        .toList();
+    List<Shop> shops = _shops.toList();
+
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      shops = shops
+          .where((shop) => shop.name.toLowerCase().contains(query))
+          .toList();
+    }
+
+    if (_activeFilters.contains(FilterOption.openNow)) {
+      shops = shops.where((shop) => isShopOpenNow(shop.openingHours)).toList();
+    }
+
+    if (_activeFilters.contains(FilterOption.bestRated)) {
+      shops.sort((a, b) {
+        final ratingA = a.rating ?? 0;
+        final ratingB = b.rating ?? 0;
+        return ratingB.compareTo(ratingA);
+      });
+    }
+
+    return shops;
   }
 
   @override
@@ -177,9 +197,52 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       ),
                     ),
                     onChanged: _onSearchChanged,
+                    onTapOutside: (_) => FocusScope.of(context).unfocus(),
                   ),
                 ),
-                // Results
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      FilterChip(
+                        label: const Text('Best Rated'),
+                        avatar: _activeFilters.contains(FilterOption.bestRated)
+                            ? null
+                            : const Icon(Icons.star, size: 18),
+                        selected: _activeFilters.contains(
+                          FilterOption.bestRated,
+                        ),
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _activeFilters.add(FilterOption.bestRated);
+                            } else {
+                              _activeFilters.remove(FilterOption.bestRated);
+                            }
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      FilterChip(
+                        label: const Text('Open Now'),
+                        avatar: _activeFilters.contains(FilterOption.openNow)
+                            ? null
+                            : const Icon(Icons.access_time, size: 18),
+                        selected: _activeFilters.contains(FilterOption.openNow),
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _activeFilters.add(FilterOption.openNow);
+                            } else {
+                              _activeFilters.remove(FilterOption.openNow);
+                            }
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Expanded(
                   child: _shops.isEmpty
                       ? const Center(
