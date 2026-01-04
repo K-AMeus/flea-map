@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/supabase/supabase_client.dart';
+import '../shared/service/shop_service.dart';
+import '../shared/service/favorite_service.dart';
+import '../shared/service/local_storage_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -12,14 +15,11 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   var _loading = true;
   User? _user;
-  final int _favoriteShopsCount = 0;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadProfile();
-    });
+    _loadProfile();
   }
 
   Future<void> _loadProfile() async {
@@ -29,28 +29,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       setState(() {
         _user = user;
+        _loading = false;
       });
     } catch (e) {
-      if (mounted && _user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error loading profile'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
+      if (!mounted) return;
+
+      setState(() {
+        _loading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error loading profile'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  String _formatDate(String? dateString) {
+    if (dateString == null) return 'Unknown';
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return 'Unknown';
     }
   }
 
   Future<void> _signOut() async {
     try {
       await supabase.auth.signOut();
+
+      ShopService().invalidateCache();
+      FavoriteService().invalidateCache();
+      LocalStorageService().clearAll();
     } catch (e) {
       if (!mounted) return;
 
@@ -61,6 +74,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       );
     }
+  }
+
+  void _showAboutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('About'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Flea-Map helps you discover and save your favorite flea markets and thrift shops. We are currently operating in Tallinn, Estonia.',
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -93,49 +131,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (_user?.email != null) ...[
-                    const SizedBox(height: 8),
+                  if (_user?.email != null)
                     Text(
                       _user!.email!,
                       style: Theme.of(
                         context,
                       ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                     ),
-                  ],
                 ],
               ),
             ),
             const SizedBox(height: 32),
 
-            // Stats section
+            // Account section
             Text(
-              'Activity',
+              'Account',
               style: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _StatItem(
-                      icon: Icons.favorite,
-                      label: 'Favorite Shops',
-                      value: _favoriteShopsCount.toString(),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.email_outlined),
+                    title: const Text('Email'),
+                    subtitle: Text(_user?.email ?? 'Not available'),
+                  ),
+                  const Divider(height: 1),
+                  if (_user?.createdAt != null)
+                    ListTile(
+                      leading: const Icon(Icons.calendar_today_outlined),
+                      title: const Text('Member since'),
+                      subtitle: Text(_formatDate(_user!.createdAt)),
                     ),
-                    // todo: add more stats like "shops visited", "posts shared", etc.
-                  ],
-                ),
+                ],
               ),
             ),
             const SizedBox(height: 32),
 
-            // Settings section
             Text(
-              'Settings',
+              'About',
               style: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -148,7 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     leading: const Icon(Icons.info_outline),
                     title: const Text('About Flea-Map'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {},
+                    onTap: _showAboutDialog,
                   ),
                 ],
               ),
@@ -171,41 +208,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _StatItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, size: 32, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-        ),
-      ],
     );
   }
 }
