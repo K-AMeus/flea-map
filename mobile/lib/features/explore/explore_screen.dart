@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../shared/model/shop.dart';
 import '../shared/service/shop_service.dart';
@@ -163,7 +164,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         child: TextField(
                           controller: _searchController,
                           decoration: InputDecoration(
-                            hintText: 'Search shops by name...',
+                            hintText: 'Search shops...',
                             prefixIcon: const Icon(Icons.search),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
@@ -323,16 +324,56 @@ class _ShopListItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Placeholder image
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: Icon(Icons.store, size: 30, color: Colors.grey.shade400),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: shop.imageUrl != null && shop.imageUrl!.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: shop.imageUrl!,
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Icon(
+                        Icons.store,
+                        size: 30,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                  )
+                : Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Icon(
+                      Icons.store,
+                      size: 30,
+                      color: Colors.grey.shade400,
+                    ),
+                  ),
           ),
           const SizedBox(width: 12),
           // Shop info

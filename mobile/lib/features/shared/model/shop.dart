@@ -11,7 +11,7 @@ class Shop {
   final Map<String, dynamic>? openingHours;
   final double? rating;
   final int? ratingCount;
-
+  final String? imageUrl;
   const Shop({
     required this.id,
     required this.name,
@@ -25,6 +25,7 @@ class Shop {
     this.openingHours,
     this.rating,
     this.ratingCount,
+    this.imageUrl,
   });
 
   factory Shop.fromJson(Map<String, dynamic> json) {
@@ -47,6 +48,7 @@ class Shop {
       ratingCount: json['rating_count'] != null
           ? (json['rating_count'] as num).toInt()
           : null,
+      imageUrl: json['image_url'] as String?,
     );
   }
 
@@ -63,6 +65,7 @@ class Shop {
       'opening_hours': openingHours,
       'rating': rating,
       'rating_count': ratingCount,
+      'image_url': imageUrl,
     };
   }
 
