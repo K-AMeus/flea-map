@@ -2,11 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../auth/supabase/supabase_client.dart';
 import '../model/shop.dart';
+import 'local_storage_service.dart';
 
 class FavoriteService {
   static final FavoriteService _instance = FavoriteService._internal();
   factory FavoriteService() => _instance;
   FavoriteService._internal();
+
+  final _localStorage = LocalStorageService();
 
   Set<String>? _cachedFavoriteIds;
   DateTime? _lastFetchTime;
@@ -54,8 +57,23 @@ class FavoriteService {
           .toSet();
 
       _lastFetchTime = DateTime.now();
+
+      await _localStorage.saveFavoriteIds(_cachedFavoriteIds!);
+
       return Set.unmodifiable(_cachedFavoriteIds!);
     } catch (e) {
+      final localFavorites = await _localStorage.loadFavoriteIds();
+
+      if (localFavorites != null) {
+        _cachedFavoriteIds = localFavorites;
+        _lastFetchTime = await _localStorage.getFavoritesCacheTimestamp();
+        return Set.unmodifiable(_cachedFavoriteIds!);
+      }
+
+      if (_cachedFavoriteIds != null) {
+        return Set.unmodifiable(_cachedFavoriteIds!);
+      }
+
       rethrow;
     }
   }
@@ -75,6 +93,9 @@ class FavoriteService {
       _cachedFavoriteIds ??= <String>{};
       _cachedFavoriteIds!.add(shopId);
       _lastFetchTime = DateTime.now();
+
+      await _localStorage.addFavoriteId(shopId);
+
       _notifyFavoritesChanged();
     } catch (e) {
       invalidateCache();
@@ -97,6 +118,9 @@ class FavoriteService {
 
       _cachedFavoriteIds?.remove(shopId);
       _lastFetchTime = DateTime.now();
+
+      await _localStorage.removeFavoriteId(shopId);
+
       _notifyFavoritesChanged();
     } catch (e) {
       invalidateCache();
@@ -134,14 +158,28 @@ class FavoriteService {
       _cachedFavoriteIds = shops.map((s) => s.id).toSet();
       _lastFetchTime = DateTime.now();
 
+      // Update local storage
+      await _localStorage.saveFavoriteIds(_cachedFavoriteIds!);
+
       return shops;
     } catch (e) {
       rethrow;
     }
   }
 
+  Future<void> preloadFromLocalStorage() async {
+    if (_cachedFavoriteIds != null) return;
+
+    final localFavorites = await _localStorage.loadFavoriteIds();
+    if (localFavorites != null) {
+      _cachedFavoriteIds = localFavorites;
+      _lastFetchTime = await _localStorage.getFavoritesCacheTimestamp();
+    }
+  }
+
   void invalidateCache() {
     _cachedFavoriteIds = null;
     _lastFetchTime = null;
+    _localStorage.clearFavorites();
   }
 }

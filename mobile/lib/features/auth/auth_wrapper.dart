@@ -5,6 +5,7 @@ import 'login/login_screen.dart';
 import '../navigation/navbar.dart';
 import '../shared/service/shop_service.dart';
 import '../shared/service/favorite_service.dart';
+import '../shared/service/local_storage_service.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -22,6 +23,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (_previousSession != null && currentSession == null) {
       ShopService().invalidateCache();
       FavoriteService().invalidateCache();
+      LocalStorageService().clearAll();
     }
 
     _previousSession = currentSession;
