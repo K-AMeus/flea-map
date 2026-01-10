@@ -6,22 +6,24 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../supabase/supabase_client.dart';
 
-class LoginScreen extends StatefulWidget {
-  final VoidCallback onNavigateToRegister;
+class RegisterScreen extends StatefulWidget {
+  final VoidCallback onNavigateToLogin;
 
-  const LoginScreen({super.key, required this.onNavigateToRegister});
+  const RegisterScreen({super.key, required this.onNavigateToLogin});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _loading = false;
   bool _googleLoading = false;
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   String? _emailValidator(String? value) {
     if (value == null || value.isEmpty) {
@@ -36,12 +38,59 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String? _passwordValidator(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your password';
+      return 'Please enter a password';
+    }
+    if (value.length < 8) {
+      return 'Password must be at least 8 characters';
     }
     return null;
   }
 
-  Future<void> _signInWithGoogle() async {
+  String? _confirmPasswordValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please confirm your password';
+    }
+    if (value != _passwordController.text) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
+
+  Future<void> _signUpWithEmail() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _loading = true;
+    });
+
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+
+      await supabase.auth.signUp(email: email, password: password);
+    } on AuthException catch (e) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
+      setState(() {
+        _loading = false;
+      });
+    } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(
+          content: Text('Something went wrong. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _signUpWithGoogle() async {
     setState(() {
       _googleLoading = true;
     });
@@ -80,8 +129,8 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
       scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text('Google sign-in failed. Please try again.'),
+        const SnackBar(
+          content: Text('Google sign-up failed. Please try again.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -90,8 +139,8 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     } catch (e) {
       scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text('Google sign-in failed. Please try again.'),
+        const SnackBar(
+          content: Text('Google sign-up failed. Please try again.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -114,6 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -133,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const SizedBox(height: 40),
                 Text(
-                  'Welcome to Flea Map!',
+                  'Register for Flea Map',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -141,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign in to start discovering thrift shops!',
+                  'Sign up to start discovering thrift shops!',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
@@ -160,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   validator: _emailValidator,
-                  autovalidateMode: AutovalidateMode.disabled,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -187,56 +237,41 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   validator: _passwordValidator,
-                  autovalidateMode: AutovalidateMode.disabled,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  obscureText: _obscureConfirmPassword,
+                  controller: _confirmPasswordController,
+                  decoration: InputDecoration(
+                    label: const Text('Confirm Password'),
+                    border: const OutlineInputBorder(),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                        });
+                      },
+                    ),
+                  ),
+                  validator: _confirmPasswordValidator,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                 ),
                 const SizedBox(height: 24),
                 FilledButton(
-                  onPressed: () async {
-                    if (!_formKey.currentState!.validate()) return;
-
-                    setState(() {
-                      _loading = true;
-                    });
-                    final ScaffoldMessengerState scaffoldMessenger =
-                        ScaffoldMessenger.of(context);
-                    try {
-                      final email = _emailController.text;
-                      final password = _passwordController.text;
-                      await supabase.auth.signInWithPassword(
-                        email: email,
-                        password: password,
-                      );
-                    } on AuthException catch (e) {
-                      scaffoldMessenger.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            e.message.contains('Invalid login credentials')
-                                ? 'Invalid email or password'
-                                : e.message,
-                          ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                      setState(() {
-                        _loading = false;
-                      });
-                    } catch (e) {
-                      scaffoldMessenger.showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Something went wrong. Please try again.',
-                          ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                      setState(() {
-                        _loading = false;
-                      });
-                    }
-                  },
+                  onPressed: _signUpWithEmail,
                   style: buttonStyle,
                   child: const Text(
-                    'Sign In',
+                    'Sign Up',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -264,12 +299,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
                 _googleLoading
-                    ? SizedBox(
+                    ? const SizedBox(
                         height: 50,
-                        child: const Center(child: CircularProgressIndicator()),
+                        child: Center(child: CircularProgressIndicator()),
                       )
                     : OutlinedButton.icon(
-                        onPressed: _signInWithGoogle,
+                        onPressed: _signUpWithGoogle,
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24,
@@ -293,16 +328,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have an account? ",
+                      'Already have an account? ',
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 14,
                       ),
                     ),
                     GestureDetector(
-                      onTap: widget.onNavigateToRegister,
+                      onTap: widget.onNavigateToLogin,
                       child: Text(
-                        'Sign Up',
+                        'Sign In',
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.primary,
                           fontSize: 14,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase/supabase_client.dart';
 import 'login/login_screen.dart';
+import 'register/register_screen.dart';
 import '../navigation/navbar.dart';
 import '../shared/service/shop_service.dart';
 import '../shared/service/favorite_service.dart';
@@ -16,6 +17,7 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   Session? _previousSession;
+  bool _showRegister = false;
 
   void _handleAuthStateChange(AuthState authState) {
     final currentSession = authState.session;
@@ -47,7 +49,25 @@ class _AuthWrapperState extends State<AuthWrapper> {
         final session = snapshot.hasData ? snapshot.data!.session : null;
 
         if (session == null) {
-          return const Scaffold(body: SafeArea(child: LoginScreen()));
+          return Scaffold(
+            body: SafeArea(
+              child: _showRegister
+                  ? RegisterScreen(
+                      onNavigateToLogin: () {
+                        setState(() {
+                          _showRegister = false;
+                        });
+                      },
+                    )
+                  : LoginScreen(
+                      onNavigateToRegister: () {
+                        setState(() {
+                          _showRegister = true;
+                        });
+                      },
+                    ),
+            ),
+          );
         }
 
         return const MainNavigation();
