@@ -72,15 +72,4 @@ class Shop {
   Map<String, dynamic> toJsonWithId() {
     return {'id': id, ...toJson()};
   }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Shop && runtimeType == other.runtimeType && id == other.id;
-
-  @override
-  int get hashCode => id.hashCode;
-
-  @override
-  String toString() => 'Shop(id: $id, name: $name, category: $category)';
 }

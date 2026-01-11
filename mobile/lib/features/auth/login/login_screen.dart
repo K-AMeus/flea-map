@@ -72,25 +72,16 @@ class _LoginScreenState extends State<LoginScreen> {
         provider: OAuthProvider.google,
         idToken: idToken,
       );
-    } on GoogleSignInException catch (e) {
-      if (e.code == GoogleSignInExceptionCode.canceled) {
+    } catch (e) {
+      if (e is GoogleSignInException &&
+          e.code == GoogleSignInExceptionCode.canceled) {
         setState(() {
           _googleLoading = false;
         });
         return;
       }
       scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text('Google sign-in failed. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      setState(() {
-        _googleLoading = false;
-      });
-    } catch (e) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Google sign-in failed. Please try again.'),
           backgroundColor: Colors.red,
         ),
@@ -206,14 +197,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         email: email,
                         password: password,
                       );
-                    } on AuthException catch (e) {
+                    } on AuthException {
                       scaffoldMessenger.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            e.message.contains('Invalid login credentials')
-                                ? 'Invalid email or password'
-                                : e.message,
-                          ),
+                        const SnackBar(
+                          content: Text('Invalid email or password'),
                           backgroundColor: Colors.red,
                         ),
                       );

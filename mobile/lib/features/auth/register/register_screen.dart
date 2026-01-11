@@ -70,9 +70,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final password = _passwordController.text;
 
       await supabase.auth.signUp(email: email, password: password);
-    } on AuthException catch (e) {
+    } on AuthException {
       scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text(
+            'Registration failed. Please check your information and try again.',
+          ),
+          backgroundColor: Colors.red,
+        ),
       );
       setState(() {
         _loading = false;
@@ -121,23 +126,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         provider: OAuthProvider.google,
         idToken: idToken,
       );
-    } on GoogleSignInException catch (e) {
-      if (e.code == GoogleSignInExceptionCode.canceled) {
+    } catch (e) {
+      if (e is GoogleSignInException &&
+          e.code == GoogleSignInExceptionCode.canceled) {
         setState(() {
           _googleLoading = false;
         });
         return;
       }
-      scaffoldMessenger.showSnackBar(
-        const SnackBar(
-          content: Text('Google sign-up failed. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      setState(() {
-        _googleLoading = false;
-      });
-    } catch (e) {
       scaffoldMessenger.showSnackBar(
         const SnackBar(
           content: Text('Google sign-up failed. Please try again.'),

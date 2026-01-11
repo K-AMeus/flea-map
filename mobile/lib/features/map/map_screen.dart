@@ -367,7 +367,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'No shops found. Add some shops in Supabase!',
+                          'No shops found nearby',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),

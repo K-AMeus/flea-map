@@ -32,9 +32,7 @@ class ShopListItem extends StatelessWidget {
         children: [
           _buildShopImage(),
           const SizedBox(width: 12),
-          Expanded(
-            child: _buildShopInfo(context),
-          ),
+          Expanded(child: _buildShopInfo(context)),
           _buildFavoriteButton(),
         ],
       ),
@@ -89,10 +87,7 @@ class ShopListItem extends StatelessWidget {
           shop.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 4),
         _buildRatingRow(context),
@@ -113,10 +108,7 @@ class ShopListItem extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             '(${shop.ratingCount})',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
         ],
       ],
@@ -127,23 +119,11 @@ class ShopListItem extends StatelessWidget {
     return List.generate(5, (index) {
       final rating = shop.rating ?? 0;
       if (index < rating.floor()) {
-        return const Icon(
-          Icons.star,
-          size: 16,
-          color: Colors.amber,
-        );
+        return const Icon(Icons.star, size: 16, color: Colors.amber);
       } else if (index < rating) {
-        return const Icon(
-          Icons.star_half,
-          size: 16,
-          color: Colors.amber,
-        );
+        return const Icon(Icons.star_half, size: 16, color: Colors.amber);
       } else {
-        return Icon(
-          Icons.star_border,
-          size: 16,
-          color: Colors.grey.shade300,
-        );
+        return Icon(Icons.star_border, size: 16, color: Colors.grey.shade300);
       }
     });
   }

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/supabase/supabase_client.dart';
-import '../shared/service/shop_service.dart';
-import '../shared/service/favorite_service.dart';
-import '../shared/service/local_storage_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,7 +10,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  var _loading = true;
+  bool _loading = true;
   User? _user;
 
   @override
@@ -118,10 +115,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _signOut() async {
     try {
       await supabase.auth.signOut();
-
-      ShopService().invalidateCache();
-      FavoriteService().invalidateCache();
-      LocalStorageService().clearAll();
     } catch (e) {
       if (!mounted) return;
 
